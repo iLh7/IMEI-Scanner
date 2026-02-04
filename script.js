@@ -1,89 +1,56 @@
-let data = [];
-let lastScanned = "";
+let data=[],scanLocked=false;
 
-function cleanIMEI(text) {
-  const numbers = text.replace(/\D/g, "");
-  if (numbers.length === 15) return numbers;
-  return null;
+function cleanIMEI(t){
+  let n=t.replace(/\D/g,'');
+  return n.length===15?n:null;
 }
 
-function addRow(imei, model) {
-  const date = new Date().toLocaleString();
-  data.push({ imei, model, date });
-
-  const rowIndex = data.length - 1;
-
-  const row = `<tr id="row-${rowIndex}">
-    <td>${imei}</td>
+function addRow(imei,model){
+  data.push({model,imei});
+  let i=data.length-1;
+  document.getElementById('tableBody').innerHTML+=
+  `<tr id=r${i}>
     <td>${model}</td>
-    <td>${date}</td>
-    <td><button onclick="deleteRow(${rowIndex})">❌</button></td>
+    <td>${imei}</td>
+    <td><button onclick=del(${i})>❌</button></td>
   </tr>`;
-  document.querySelector("#table tbody").innerHTML += row;
 }
 
-function deleteRow(index) {
-  data.splice(index, 1);
-  document.querySelector(`#row-${index}`).remove();
-  document.querySelectorAll("#table tbody tr").forEach((tr, i) => {
-    tr.id = `row-${i}`;
-    tr.querySelector("button").setAttribute("onclick", `deleteRow(${i})`);
-  });
+function del(i){
+  data.splice(i,1);
+  document.getElementById('r'+i).remove();
 }
 
-function addManual() {
-  const imei = prompt("ادخل IMEI (15 رقم)");
-  if (!imei || !/^\d{15}$/.test(imei)) {
-    alert("IMEI غير صالح!");
-    return;
-  }
-
-  const model = prompt("اختر نوع الآيفون");
-  if (!model) {
-    alert("اختر نوع الآيفون!");
-    return;
-  }
-
-  if (data.some(d => d.imei === imei)) {
-    alert("هذا IMEI موجود بالفعل!");
-    return;
-  }
-
-  addRow(imei, model);
+function addManual(){
+  let imei=prompt('ادخل IMEI (15 رقم)');
+  if(!/^[0-9]{15}$/.test(imei))return alert('IMEI غير صالح');
+  let model=document.getElementById('model').value;
+  if(!model)return alert('اختر نوع الآيفون');
+  if(data.some(d=>d.imei===imei))return;
+  addRow(imei,model);
 }
 
-const scanner = new Html5Qrcode("reader");
-
-scanner.start(
-  { facingMode: "environment" },
-  { fps: 10, qrbox: 250 },
-  text => {
-    const model = document.getElementById("model").value;
-    if (!model) {
-      alert("اختر نوع الآيفون أولاً");
-      return;
-    }
-
-    const imei = cleanIMEI(text);
-    if (!imei) return;
-    if (imei === lastScanned) return;
-
-    lastScanned = imei;
-    addRow(imei, model);
-
-    scanner.pause();
-    setTimeout(() => scanner.resume(), 1500);
+const s=new Html5Qrcode('reader');
+s.start(
+  {facingMode:'environment'},
+  {fps:5,qrbox:{width:.8*innerWidth,height:.8*innerWidth}},
+  t=>{
+    if(scanLocked)return;
+    let model=document.getElementById('model').value;
+    if(!model)return;
+    let imei=cleanIMEI(t);
+    if(!imei||data.some(d=>d.imei===imei))return;
+    scanLocked=true;
+    addRow(imei,model);
+    setTimeout(()=>scanLocked=false,2500);
   }
 );
 
-function downloadCSV() {
-  let csv = "IMEI,Model,Date\n";
-  data.forEach(r => { csv += `${r.imei},${r.model},${r.date}\n`; });
-
-  const blob = new Blob([csv], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "IMEI_List.csv";
+function downloadCSV(){
+  let csv='Model,IMEI\n';
+  data.forEach(d=>csv+=`${d.model},${d.imei}\n`);
+  let a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='IMEI_List.csv';
   a.click();
 }
