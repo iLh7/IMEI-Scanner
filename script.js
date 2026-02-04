@@ -1,4 +1,3 @@
-
 function cleanIMEI(t){
   let n=t.replace(/\D/g,'');
   return n.length===15?n:null;
@@ -37,7 +36,7 @@ function addManual(){
 const s=new Html5Qrcode('reader');
 s.start(
   {facingMode:'environment'},
-  {fps:5, qrbox:{width: 0.9*innerWidth, height: 0.9*innerWidth}}, // Enhanced QR reading range
+  {fps:5, qrbox:{width: 0.95*innerWidth, height: 0.95*innerWidth}}, // Further enhanced QR reading range
   t=>{
     if(scanLocked) return;
     let model=document.getElementById('model').value;
