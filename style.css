@@ -1,34 +1,38 @@
-body{
-  font-family:Arial,sans-serif;
-  text-align:center;
-  background:#f7f7f7;
-  margin:0;
-  padding:10px
+/* تنسيق التنبيهات الهادئة */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 25px;
+  border-radius: 25px;
+  color: white;
+  font-size: 16px;
+  z-index: 1000;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  animation: fadeInOut 2.5s ease-in-out;
 }
-#reader{
-  width:90vw;
-  max-width:420px;
-  margin:20px auto
+
+.success { background-color: #2ecc71; } /* أخضر للنجاح */
+.warning { background-color: #e67e22; } /* برتقالي للتكرار */
+
+@keyframes fadeInOut {
+  0% { opacity: 0; bottom: 10px; }
+  15% { opacity: 1; bottom: 20px; }
+  85% { opacity: 1; bottom: 20px; }
+  100% { opacity: 0; bottom: 10px; }
 }
-select,button{
-  width:90%;
-  max-width:420px;
-  padding:14px;
-  margin:8px;
-  font-size:18px;
-  border-radius:10px
+
+/* تحسين شكل زر الحذف ليكون أقل إزعاجاً */
+.btn-del {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
 }
-button{
-  background:#007bff;
-  color:#fff;
-  border:none
-}
-table{
-  width:95%;
-  margin:20px auto;
-  border-collapse:collapse
-}
-th,td{
-  border:1px solid #ccc;
-  padding:10px
+
+#reader {
+  border: 2px solid #007bff;
+  border-radius: 15px;
+  overflow: hidden;
 }
