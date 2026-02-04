@@ -23,14 +23,12 @@ function addRow(imei, model) {
 }
 
 function deleteRow(index) {
-  if (confirm("هل أنت متأكد أنك تريد حذف هذا السطر؟")) {
-    data.splice(index, 1);
-    document.querySelector(`#row-${index}`).remove();
-    document.querySelectorAll("#table tbody tr").forEach((tr, i) => {
-      tr.id = `row-${i}`;
-      tr.querySelector("button").setAttribute("onclick", `deleteRow(${i})`);
-    });
-  }
+  data.splice(index, 1);
+  document.querySelector(`#row-${index}`).remove();
+  document.querySelectorAll("#table tbody tr").forEach((tr, i) => {
+    tr.id = `row-${i}`;
+    tr.querySelector("button").setAttribute("onclick", `deleteRow(${i})`);
+  });
 }
 
 function addManual() {
@@ -56,10 +54,9 @@ function addManual() {
 
 const scanner = new Html5Qrcode("reader");
 
-// Enhanced camera settings for better distance scanning
 scanner.start(
   { facingMode: "environment" },
-  { fps: 15, qrbox: 400 },  // Adjusted fps and box size for better scanning distance
+  { fps: 10, qrbox: 250 },
   text => {
     const model = document.getElementById("model").value;
     if (!model) {
@@ -80,10 +77,8 @@ scanner.start(
 );
 
 function downloadCSV() {
-  let csv = "IMEI,Model,Date
-";
-  data.forEach(r => { csv += `${r.imei},${r.model},${r.date}
-`; });
+  let csv = "IMEI,Model,Date\n";
+  data.forEach(r => { csv += `${r.imei},${r.model},${r.date}\n`; });
 
   const blob = new Blob([csv], { type: "text/csv" });
   const url = URL.createObjectURL(blob);
