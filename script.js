@@ -56,9 +56,10 @@ function addManual() {
 
 const scanner = new Html5Qrcode("reader");
 
+// Enhanced camera settings for better distance scanning
 scanner.start(
   { facingMode: "environment" },
-  { fps: 10, qrbox: 250 },
+  { fps: 15, qrbox: 400 },  // Adjusted fps and box size for better scanning distance
   text => {
     const model = document.getElementById("model").value;
     if (!model) {
