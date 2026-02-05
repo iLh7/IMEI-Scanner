@@ -1,6 +1,5 @@
-let data = [], scanLocked = false;
-let currentTotalZoom = 1.0;
-let videoTrack = null;
+let data = [];
+let scanLocked = false;
 
 // وظائف التنبيه
 function notify(text, isError = false) {
@@ -18,14 +17,18 @@ function notify(text, isError = false) {
 }
 
 function cleanIMEI(t) {
-    let n = t.replace(/\D/g, '');
+    let n = t.replace(/\D/g, ''); 
     return n.length === 15 ? n : null;
 }
 
 function addRow(imei, model) {
     data.push({ model, imei });
     const i = data.length - 1;
-    const row = `<tr id="r${i}"><td>${model}</td><td>${imei}</td><td><button style="border:none;background:none;color:red;font-size:18px" onclick="del(${i})">❌</button></td></tr>`;
+    const row = `<tr id="r${i}">
+        <td>${model}</td>
+        <td>${imei}</td>
+        <td><button style="border:none;background:none;color:red;font-size:18px" onclick="del(${i})">❌</button></td>
+    </tr>`;
     document.getElementById('tableBody').insertAdjacentHTML('afterbegin', row);
 }
 
@@ -35,83 +38,58 @@ function del(i) {
     if(el) el.remove();
 }
 
+// --- المحرك المطور للمسح عبر الصور الثابتة ---
 const html5QrCode = new Html5Qrcode("reader");
 
-// تشغيل الكاميرا بإعدادات مستقرة
-html5QrCode.start({ facingMode: "environment" }, { fps: 20 }, () => {})
-    .then(() => {
-        const videoElement = document.querySelector('#reader video');
-        if (videoElement && videoElement.srcObject) {
-            videoTrack = videoElement.srcObject.getVideoTracks()[0];
-        }
-    });
+// بدء الكاميرا للعرض فقط
+html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 100 } }, () => {});
 
-// دالة الزووم الهجين
-async function applyHybridZoom(targetValue) {
-    if (!videoTrack) return;
-    const videoElement = document.querySelector('#reader video');
-    try {
-        const capabilities = videoTrack.getCapabilities();
-        let hwZoom = 1.0;
-        if (capabilities.zoom) {
-            hwZoom = Math.min(targetValue, capabilities.zoom.max);
-            await videoTrack.applyConstraints({ advanced: [{ zoom: hwZoom }] });
-        }
-        let cssScale = targetValue / hwZoom;
-        if (videoElement) videoElement.style.transform = `scale(${cssScale})`;
-        currentTotalZoom = targetValue;
-        document.getElementById('zoom-indicator').innerText = `Zoom: ${currentTotalZoom.toFixed(1)}x`;
-    } catch (e) { console.error(e); }
-}
-
-function changeZoom(amount) { applyHybridZoom(Math.min(Math.max(currentTotalZoom + amount, 1.0), 10.0)); }
-function setZoom(val) { applyHybridZoom(val); }
-
-// --- المحرك الجديد للمسح الفوري عند الضغط ---
 async function captureAndScan() {
     if (scanLocked) return;
     const model = document.getElementById('model').value;
     if (!model) return notify("⚠️ اختر الموديل أولاً", true);
 
     scanLocked = true;
-    notify("جاري التحليل الفوري...", false);
+    notify("جاري المسح بأعلى دقة...", false);
 
     try {
         const video = document.querySelector("#reader video");
+        const canvas = document.createElement("canvas");
         
-        // استخدام المسح المباشر من عنصر الفيديو (أسرع وأدق حل للأيفون)
-        html5QrCode.scanFile(video, true) // المسح المباشر من داتا الفيديو
-            .then(decodedText => {
-                const imei = cleanIMEI(decodedText);
-                if (imei) {
-                    if (data.some(d => d.imei === imei)) notify("⚠️ مكرر مسبقاً", true);
-                    else { addRow(imei, model); notify("تم المسح بنجاح"); }
-                }
-                scanLocked = false;
-            })
-            .catch(() => {
-                // محاولة ثانية باستخدام اللقطة الثابتة إذا فشل المسح المباشر
-                const canvas = document.createElement("canvas");
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                canvas.getContext("2d").drawImage(video, 0, 0);
-                
-                canvas.toBlob((blob) => {
-                    const file = new File([blob], "img.png", {type: "image/png"});
-                    html5QrCode.scanFile(file, true)
-                        .then(res => {
-                            const imei = cleanIMEI(res);
-                            if(imei) { addRow(imei, model); notify("تم المسح بنجاح"); }
-                            scanLocked = false;
-                        })
-                        .catch(() => {
-                            notify("لم يتم التعرف، جرب التقريب أو الإضاءة", true);
-                            scanLocked = false;
-                        });
+        // استخدام أقصى دقة توفرها الكاميرا حالياً
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext("2d");
+        
+        // تحسين الصورة الملتقطة (زيادة التباين برمجياً)
+        ctx.filter = 'contrast(1.4) brightness(1.1)';
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob(async (blob) => {
+            const file = new File([blob], "imei_scan.png", { type: "image/png" });
+            
+            // استخدام المسح من ملف (أقوى محرك في المكتبة)
+            html5QrCode.scanFile(file, true)
+                .then(decodedText => {
+                    const imei = cleanIMEI(decodedText);
+                    if (imei) {
+                        if (data.some(d => d.imei === imei)) {
+                            notify("⚠️ مكرر مسبقاً", true);
+                        } else {
+                            addRow(imei, model);
+                            notify("تم المسح بنجاح");
+                        }
+                    }
+                    scanLocked = false;
+                })
+                .catch(err => {
+                    console.log("Scan failed:", err);
+                    notify("تعذر المسح، قرب العدسة أكثر وثبت يدك", true);
+                    scanLocked = false;
                 });
-            });
+        }, 'image/png', 1.0); // جودة كاملة 100%
     } catch (e) {
-        notify("خطأ في الاتصال بالكاميرا", true);
+        notify("خطأ في معالجة الصورة", true);
         scanLocked = false;
     }
 }
@@ -122,7 +100,7 @@ function downloadCSV() {
     data.forEach(d => csv += `${d.model},${d.imei}\n`);
     const link = document.createElement("a");
     link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-    link.download = `Sales_${new Date().toLocaleDateString()}.csv`;
+    link.download = `Sales_Log.csv`;
     link.click();
 }
 
