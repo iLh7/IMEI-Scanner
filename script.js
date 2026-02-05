@@ -1,6 +1,7 @@
 let data = [], scanLocked = false;
+let currentZoom = 1.0;
+let videoTrack = null;
 
-// التنبيهات
 function notify(text, isError = false) {
     if (!isError) {
         const speech = new SpeechSynthesisUtterance("لقد تم مسح imei");
@@ -23,7 +24,7 @@ function cleanIMEI(t) {
 function addRow(imei, model) {
     data.push({ model, imei });
     const i = data.length - 1;
-    const row = `<tr id="r${i}"><td>${model}</td><td>${imei}</td><td><button class="btn-del" onclick="del(${i})">❌</button></td></tr>`;
+    const row = `<tr id="r${i}"><td>${model}</td><td>${imei}</td><td><button style="border:none;background:none;color:red;font-size:18px" onclick="del(${i})">❌</button></td></tr>`;
     document.getElementById('tableBody').insertAdjacentHTML('afterbegin', row);
 }
 
@@ -33,15 +34,40 @@ function del(i) {
     if(el) el.remove();
 }
 
-// إعدادات الكاميرا والمسح
 const html5QrCode = new Html5Qrcode("reader");
 
 const config = {
-    fps: 30, // سرعة عالية للالتقاط اللحظي
-    qrbox: { width: 280, height: 100 }, // مطابقة المستطيل الأبيض
+    fps: 25,
+    qrbox: { width: 280, height: 100 },
     aspectRatio: 1.0,
     formatsToSupport: [ Html5QrcodeSupportedFormats.CODE_128 ]
 };
+
+// وظيفة التحكم في الزووم
+async function changeZoom(amount) {
+    if (!videoTrack) return;
+    
+    try {
+        const capabilities = videoTrack.getCapabilities();
+        if (!capabilities.zoom) {
+            console.log("الزووم غير مدعوم في هذا المتصفح/الجهاز");
+            return;
+        }
+
+        let min = capabilities.zoom.min;
+        let max = capabilities.zoom.max;
+        
+        currentZoom = Math.min(Math.max(currentZoom + amount, min), max);
+        
+        await videoTrack.applyConstraints({
+            advanced: [{ zoom: currentZoom }]
+        });
+        
+        console.log("Current Zoom:", currentZoom);
+    } catch (e) {
+        console.error("Zoom Error:", e);
+    }
+}
 
 function startScanner() {
     html5QrCode.start(
@@ -55,32 +81,33 @@ function startScanner() {
             if (imei && model) {
                 if (data.some(d => d.imei === imei)) {
                     scanLocked = true;
-                    notify("⚠️ هذا الرقم مكرر", true);
+                    notify("⚠️ مكرر", true);
                     setTimeout(() => scanLocked = false, 2500);
                     return;
                 }
                 scanLocked = true;
                 addRow(imei, model);
-                notify("تم المسح بنجاح");
+                notify("تم المسح");
                 setTimeout(() => scanLocked = false, 1500);
-            } else if (!model && imei) {
-                scanLocked = true;
-                notify("اختر الموديل أولاً", true);
-                setTimeout(() => scanLocked = false, 2000);
             }
         }
-    ).catch(err => console.error("Camera Error: ", err));
+    ).then(() => {
+        // الحصول على مسار الفيديو للتحكم في الزووم بعد التشغيل
+        const videoElement = document.querySelector('#reader video');
+        if (videoElement && videoElement.srcObject) {
+            videoTrack = videoElement.srcObject.getVideoTracks()[0];
+        }
+    }).catch(err => console.error("Scanner Start Error:", err));
 }
 
 startScanner();
 
 function downloadCSV() {
-    if (data.length === 0) return alert("الجدول فارغ!");
     let csv = '\uFEFFModel,IMEI\n';
     data.forEach(d => csv += `${d.model},${d.imei}\n`);
     const link = document.createElement("a");
     link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
-    link.download = `Sales_${new Date().toLocaleDateString()}.csv`;
+    link.download = `Sales.csv`;
     link.click();
 }
 
@@ -89,6 +116,6 @@ function addManual() {
     if (imei && /^[0-9]{15}$/.test(imei)) {
         let model = document.getElementById('model').value;
         if (model) addRow(imei, model);
-        else alert("اختر الموديل");
+        else alert("اختر النوع");
     }
 }
