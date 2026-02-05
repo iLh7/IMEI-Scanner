@@ -1,5 +1,5 @@
 let data = [], scanLocked = false;
-let currentZoom = 1.0;
+let currentTotalZoom = 1.0; // الزووم الإجمالي المستهدف
 let videoTrack = null;
 
 function notify(text, isError = false) {
@@ -43,33 +43,45 @@ const config = {
     formatsToSupport: [ Html5QrcodeSupportedFormats.CODE_128 ]
 };
 
-// وظيفة الزووم المحدثة (تدعم حتى 5x أو أقصى حد للجهاز)
-async function applyZoom(value) {
+// وظيفة الزووم الهجين (تصل لـ 5x على أي جهاز)
+async function applyHybridZoom(targetValue) {
     if (!videoTrack) return;
+    const videoElement = document.querySelector('#reader video');
+    
     try {
         const capabilities = videoTrack.getCapabilities();
-        if (!capabilities.zoom) return;
+        let hwZoom = 1.0;
 
-        // التأكد من عدم تجاوز حدود الجهاز (بعض الأجهزة قد تصل لـ 10x وبعضها لـ 3x)
-        let targetZoom = Math.min(Math.max(value, capabilities.zoom.min), capabilities.zoom.max);
+        // 1. تطبيق أقصى زووم حقيقي يدعمه الجهاز
+        if (capabilities.zoom) {
+            hwZoom = Math.min(targetValue, capabilities.zoom.max);
+            await videoTrack.applyConstraints({
+                advanced: [{ zoom: hwZoom }]
+            });
+        }
+
+        // 2. تطبيق التكبير البرمجي (CSS Scale) للوصول للهدف
+        // المعادلة: القيمة المستهدفة مقسومة على ما حققه الجهاز فعلياً
+        let cssScale = targetValue / hwZoom;
         
-        await videoTrack.applyConstraints({
-            advanced: [{ zoom: targetZoom }]
-        });
-        
-        currentZoom = targetZoom;
-        document.getElementById('zoom-indicator').innerText = `Zoom: ${currentZoom.toFixed(1)}x`;
+        if (videoElement) {
+            videoElement.style.transform = `scale(${cssScale})`;
+        }
+
+        currentTotalZoom = targetValue;
+        document.getElementById('zoom-indicator').innerText = `Total Zoom: ${currentTotalZoom.toFixed(1)}x`;
     } catch (e) {
         console.error("Zoom Error:", e);
     }
 }
 
 function changeZoom(amount) {
-    applyZoom(currentZoom + amount);
+    let nextZoom = Math.min(Math.max(currentTotalZoom + amount, 1.0), 10.0); // سقف اختياري لـ 10x
+    applyHybridZoom(nextZoom);
 }
 
 function setZoom(value) {
-    applyZoom(value);
+    applyHybridZoom(value);
 }
 
 function startScanner() {
@@ -119,6 +131,6 @@ function addManual() {
     if (imei && /^[0-9]{15}$/.test(imei)) {
         let model = document.getElementById('model').value;
         if (model) addRow(imei, model);
-        else alert("اختر الموديل");
+        else alert("اختر الموديل أولاً");
     }
 }
