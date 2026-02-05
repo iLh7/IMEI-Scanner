@@ -1,95 +1,60 @@
-/* تصميم متوافق مع Apple iOS */
 body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
   background-color: #f2f2f7;
   margin: 0;
-  padding: 20px;
+  padding: 15px;
   direction: rtl;
-  color: #1c1c1e;
 }
 
-h2 { text-align: center; margin-bottom: 20px; font-weight: 600; }
-
-/* حاوية الماسح الضوئي - تحسين الحواف والظل */
 #reader {
   width: 100%;
-  max-width: 500px;
-  margin: 0 auto 20px;
+  max-width: 450px;
+  margin: 10px auto;
   border-radius: 20px;
   overflow: hidden;
   background: #000;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
   border: 2px solid #007aff;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
 }
 
-/* القوائم والأزرار */
 select, .btn-main {
   width: 100%;
   padding: 16px;
-  margin: 10px 0;
+  margin: 8px 0;
   border-radius: 12px;
   font-size: 17px;
   border: 1px solid #d1d1d6;
-  background: white;
-  display: block;
 }
 
 .btn-main {
   background-color: #007aff;
   color: white;
-  border: none;
   font-weight: 600;
-  cursor: pointer;
+  border: none;
 }
 
-.btn-download { background-color: #34c759; }
-
-/* الجدول الاحترافي */
 .table-container {
   background: white;
   border-radius: 14px;
-  margin-top: 25px;
-  overflow: hidden;
+  margin-top: 20px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
+table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+th, td { padding: 12px 8px; text-align: center; border-bottom: 1px solid #f2f2f7; font-size: 14px; }
 
-th {
-  background-color: #f9f9f9;
-  padding: 12px;
-  font-size: 14px;
-  color: #8e8e93;
-  border-bottom: 1px solid #e5e5ea;
-}
-
-td {
-  padding: 15px 10px;
-  text-align: center;
-  border-bottom: 1px solid #f2f2f7;
-  font-size: 15px;
-}
-
-/* ترتيب الأعمدة من اليمين لليسار */
+/* ترتيب الأعمدة المطلوبة */
 th:nth-child(1), td:nth-child(1) { width: 35%; } /* الموديل */
 th:nth-child(2), td:nth-child(2) { width: 50%; font-family: monospace; } /* IMEI */
 th:nth-child(3), td:nth-child(3) { width: 15%; } /* حذف */
 
-.btn-del { color: #ff3b30; font-size: 18px; background: none; border: none; }
-
-/* التنبيهات (Toasts) */
 .toast {
   position: fixed;
-  top: 50px;
+  top: 40px;
   left: 50%;
   transform: translateX(-50%);
-  padding: 12px 24px;
-  border-radius: 25px;
+  padding: 12px 20px;
+  border-radius: 20px;
   color: white;
-  font-weight: 500;
   z-index: 9999;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
