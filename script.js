@@ -1,7 +1,9 @@
 let data = [];
 let scanLocked = false;
+let videoTrack = null;
+let currentZoom = 1.0;
 
-// وظائف التنبيه
+// وظائف التنبيه الصوتي والبصري
 function notify(text, isError = false) {
     if (!isError) {
         const speech = new SpeechSynthesisUtterance("لقد تم مسح imei");
@@ -38,61 +40,80 @@ function del(i) {
     if(el) el.remove();
 }
 
-// --- المحرك المطور للمسح عبر الصور الثابتة ---
+// --- إعدادات المسح المباشر المستقرة ---
 const html5QrCode = new Html5Qrcode("reader");
 
-// بدء الكاميرا للعرض فقط
-html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 100 } }, () => {});
+const qrConfig = {
+    fps: 30, // سرعة عالية للالتقاط
+    qrbox: { width: 300, height: 120 }, // منطقة المسح المستطيلة للباركود
+    aspectRatio: 1.0
+};
 
+// وظيفة الزوم المتوافقة مع آيفون
+async function applyZoom(value) {
+    if (!videoTrack) return;
+    try {
+        const capabilities = videoTrack.getCapabilities();
+        if (capabilities.zoom) {
+            const target = Math.min(Math.max(value, capabilities.zoom.min), capabilities.zoom.max);
+            await videoTrack.applyConstraints({ advanced: [{ zoom: target }] });
+            currentZoom = target;
+            document.getElementById('zoom-indicator').innerText = `Zoom: ${currentZoom.toFixed(1)}x`;
+        }
+    } catch (e) {
+        console.error("Zoom Error:", e);
+    }
+}
+
+function changeZoom(amount) {
+    applyZoom(currentZoom + amount);
+}
+
+function setZoom(val) {
+    applyZoom(val);
+}
+
+// دالة المسح عند الضغط (لزيادة الدقة)
 async function captureAndScan() {
     if (scanLocked) return;
     const model = document.getElementById('model').value;
     if (!model) return notify("⚠️ اختر الموديل أولاً", true);
 
     scanLocked = true;
-    notify("جاري المسح بأعلى دقة...", false);
+    notify("جاري المسح...", false);
 
-    try {
-        const video = document.querySelector("#reader video");
-        const canvas = document.createElement("canvas");
-        
-        // استخدام أقصى دقة توفرها الكاميرا حالياً
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const ctx = canvas.getContext("2d");
-        
-        // تحسين الصورة الملتقطة (زيادة التباين برمجياً)
-        ctx.filter = 'contrast(1.4) brightness(1.1)';
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        canvas.toBlob(async (blob) => {
-            const file = new File([blob], "imei_scan.png", { type: "image/png" });
-            
-            // استخدام المسح من ملف (أقوى محرك في المكتبة)
-            html5QrCode.scanFile(file, true)
-                .then(decodedText => {
-                    const imei = cleanIMEI(decodedText);
-                    if (imei) {
-                        if (data.some(d => d.imei === imei)) {
-                            notify("⚠️ مكرر مسبقاً", true);
-                        } else {
-                            addRow(imei, model);
-                            notify("تم المسح بنجاح");
-                        }
-                    }
-                    scanLocked = false;
-                })
-                .catch(err => {
-                    console.log("Scan failed:", err);
-                    notify("تعذر المسح، قرب العدسة أكثر وثبت يدك", true);
-                    scanLocked = false;
-                });
-        }, 'image/png', 1.0); // جودة كاملة 100%
-    } catch (e) {
-        notify("خطأ في معالجة الصورة", true);
-        scanLocked = false;
-    }
+    // محاولة المسح من الفيديو الحالي مباشرة
+    const video = document.querySelector("#reader video");
+    html5QrCode.scanFile(video, true)
+        .then(res => {
+            const imei = cleanIMEI(res);
+            if(imei) {
+                if (data.some(d => d.imei === imei)) notify("⚠️ مكرر مسبقاً", true);
+                else { addRow(imei, model); notify("تم المسح بنجاح"); }
+            }
+            scanLocked = false;
+        })
+        .catch(() => {
+            notify("تعذر المسح، جرب التقريب بالزوم", true);
+            scanLocked = false;
+        });
 }
+
+// تشغيل الكاميرا فور تحميل الصفحة
+html5QrCode.start({ facingMode: "environment" }, qrConfig, (decodedText) => {
+    // مسح تلقائي إذا التقط الباركود صدفة
+    const imei = cleanIMEI(decodedText);
+    const model = document.getElementById('model').value;
+    if (imei && model && !scanLocked && !data.some(d => d.imei === imei)) {
+        addRow(imei, model);
+        notify("تم المسح بنجاح");
+    }
+}).then(() => {
+    const videoElement = document.querySelector('#reader video');
+    if (videoElement && videoElement.srcObject) {
+        videoTrack = videoElement.srcObject.getVideoTracks()[0];
+    }
+});
 
 function downloadCSV() {
     if (data.length === 0) return;
@@ -100,7 +121,7 @@ function downloadCSV() {
     data.forEach(d => csv += `${d.model},${d.imei}\n`);
     const link = document.createElement("a");
     link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-    link.download = `Sales_Log.csv`;
+    link.download = `Sales_${new Date().toLocaleDateString()}.csv`;
     link.click();
 }
 
