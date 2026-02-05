@@ -1,97 +1,95 @@
+/* تصميم متوافق مع Apple iOS */
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  text-align: center;
-  background: #f4f7f9;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  background-color: #f2f2f7;
   margin: 0;
-  padding: 15px;
-  direction: rtl; /* اتجاه الكتابة من اليمين لليسار */
+  padding: 20px;
+  direction: rtl;
+  color: #1c1c1e;
 }
 
-h2 { color: #2c3e50; margin-bottom: 20px; }
+h2 { text-align: center; margin-bottom: 20px; font-weight: 600; }
 
-/* حاوية الكاميرا */
+/* حاوية الماسح الضوئي - تحسين الحواف والظل */
 #reader {
   width: 100%;
-  max-width: 480px;
-  margin: 15px auto;
-  border-radius: 18px;
+  max-width: 500px;
+  margin: 0 auto 20px;
+  border-radius: 20px;
   overflow: hidden;
-  border: 2px solid #007bff;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  background: #000;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  border: 2px solid #007aff;
 }
 
-/* الأزرار والقوائم */
-select, button {
+/* القوائم والأزرار */
+select, .btn-main {
   width: 100%;
-  max-width: 450px;
-  padding: 15px;
-  margin: 8px 0;
-  font-size: 17px;
+  padding: 16px;
+  margin: 10px 0;
   border-radius: 12px;
-  border: 1px solid #dcdcdc;
-  font-weight: 500;
+  font-size: 17px;
+  border: 1px solid #d1d1d6;
+  background: white;
+  display: block;
 }
 
-button {
-  background: #007bff;
-  color: #fff;
+.btn-main {
+  background-color: #007aff;
+  color: white;
   border: none;
+  font-weight: 600;
   cursor: pointer;
 }
 
-button:active { background: #0056b3; }
+.btn-download { background-color: #34c759; }
 
-.btn-download { background: #27ae60; margin-top: 15px; }
-
-/* الجدول وتنسيقه */
+/* الجدول الاحترافي */
 .table-container {
-  overflow-x: auto;
   background: white;
-  border-radius: 15px;
+  border-radius: 14px;
   margin-top: 25px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed;
 }
 
-th, td {
-  padding: 15px 8px;
-  border-bottom: 1px solid #eee;
-  font-size: 15px;
+th {
+  background-color: #f9f9f9;
+  padding: 12px;
+  font-size: 14px;
+  color: #8e8e93;
+  border-bottom: 1px solid #e5e5ea;
+}
+
+td {
+  padding: 15px 10px;
   text-align: center;
-  word-wrap: break-word;
+  border-bottom: 1px solid #f2f2f7;
+  font-size: 15px;
 }
 
-th { background: #f8f9fa; color: #34495e; }
-
-/* تخصيص عرض الأعمدة */
+/* ترتيب الأعمدة من اليمين لليسار */
 th:nth-child(1), td:nth-child(1) { width: 35%; } /* الموديل */
-th:nth-child(2), td:nth-child(2) { width: 50%; } /* IMEI */
-th:nth-child(3), td:nth-child(3) { width: 15%; } /* إجراء */
+th:nth-child(2), td:nth-child(2) { width: 50%; font-family: monospace; } /* IMEI */
+th:nth-child(3), td:nth-child(3) { width: 15%; } /* حذف */
 
-.btn-del-row {
-  background: none;
-  color: #e74c3c;
-  font-size: 18px;
-  padding: 0;
-  width: auto;
-}
+.btn-del { color: #ff3b30; font-size: 18px; background: none; border: none; }
 
-/* التنبيهات */
+/* التنبيهات (Toasts) */
 .toast {
   position: fixed;
-  bottom: 30px;
+  top: 50px;
   left: 50%;
   transform: translateX(-50%);
-  padding: 14px 25px;
+  padding: 12px 24px;
   border-radius: 25px;
   color: white;
-  z-index: 2000;
-  font-weight: bold;
+  font-weight: 500;
+  z-index: 9999;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
-.success { background: #2ecc71; }
-.warning { background: #e67e22; }
