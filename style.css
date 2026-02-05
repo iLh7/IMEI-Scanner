@@ -21,7 +21,6 @@ h2 { text-align: center; color: #1c1c1e; margin-bottom: 15px; }
 
 #reader { width: 100% !important; border: none !important; }
 
-/* المستطيل الأبيض */
 .scanner-overlay {
   position: absolute;
   top: 50%;
@@ -36,26 +35,30 @@ h2 { text-align: center; color: #1c1c1e; margin-bottom: 15px; }
   pointer-events: none;
 }
 
-/* تنسيق أزرار الزووم */
 .zoom-controls {
   position: absolute;
-  bottom: 15px;
+  bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 20px;
+  gap: 15px;
   z-index: 20;
 }
 
 .zoom-controls button {
-  background: rgba(255, 255, 255, 0.8);
-  border: none;
-  padding: 12px 20px;
-  border-radius: 10px;
-  font-size: 18px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #007bff;
+  padding: 15px 25px;
+  border-radius: 50px; /* شكل بيضاوي مريح */
+  font-size: 16px;
   font-weight: bold;
-  color: #000;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  color: #007bff;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.zoom-controls button:active {
+  background: #007bff;
+  color: #fff;
 }
 
 select, .btn-main {
@@ -71,9 +74,14 @@ select, .btn-main {
 .btn-main { background-color: #007bff; color: white; border: none; font-weight: 600; }
 .btn-download { background-color: #34c759; margin-top: 10px; }
 
-.table-container { background: white; border-radius: 14px; margin-top: 25px; overflow: hidden; }
+.table-container { background: white; border-radius: 14px; margin-top: 25px; overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; table-layout: fixed; }
 th, td { padding: 12px 5px; text-align: center; border-bottom: 1px solid #f2f2f7; font-size: 14px; }
+
+/* ترتيب الجدول: موديل - ايمي - إجراء */
+th:nth-child(1), td:nth-child(1) { width: 35%; } 
+th:nth-child(2), td:nth-child(2) { width: 50%; } 
+th:nth-child(3), td:nth-child(3) { width: 15%; } 
 
 .toast {
   position: fixed;
