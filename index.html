@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>IMEI Scanner - Universal 5x Zoom</title>
+    <title>IMEI Scanner - Capture Mode</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <h2>📦 ماسح IMEI (زووم 5x موحد)</h2>
+    <h2>📦 نظام مسح الأجهزة (وضع الالتقاط)</h2>
 
     <select id="model">
         <option value="">-- اختر نوع الجهاز --</option>
@@ -33,19 +33,21 @@
     <div id="reader-container">
         <div id="reader"></div>
         <div class="scanner-overlay"></div>
-        
         <div id="zoom-indicator">Zoom: 1.0x</div>
         
         <div class="zoom-controls">
             <button onclick="changeZoom(1.0)">➕ تقريب</button>
             <button onclick="changeZoom(-1.0)">➖ تبعيد</button>
-            <button onclick="setZoom(5.0)" style="background:#ff9500; color:white">🚀 MAX 5x</button>
-            <button onclick="setZoom(1.0)" style="background:#8e8e93; color:white">🔄 1x</button>
+            <button onclick="setZoom(1.0)">🔄 1x</button>
         </div>
     </div>
 
-    <button class="btn-main" onclick="addManual()">➕ إضافة يدوية</button>
-    <button class="btn-main btn-download" onclick="downloadCSV()">⬇️ حفظ ملف Excel</button>
+    <button class="btn-main btn-capture" onclick="captureAndScan()">📸 اضغط للمسح الآن</button>
+    
+    <div class="action-buttons">
+        <button class="btn-secondary" onclick="addManual()">➕ إضافة يدوية</button>
+        <button class="btn-secondary btn-download" onclick="downloadCSV()">⬇️ تحميل Excel</button>
+    </div>
 
     <div class="table-container">
         <table>
@@ -53,7 +55,7 @@
                 <tr>
                     <th>الموديل</th>
                     <th>IMEI</th>
-                    <th>حذف</th>
+                    <th>إجراء</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
