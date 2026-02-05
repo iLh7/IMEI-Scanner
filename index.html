@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>IMEI Scanner Fixed</title>
+    <title>IMEI Scanner iPro</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h2>📦 ماسح الأجهزة الذكي</h2>
+
+    <h2>IMEI Scanner iPro</h2>
+
     <select id="model">
         <option value="">-- اختر نوع الجهاز --</option>
         <option>iPhone 17 Pro Max</option>
@@ -28,10 +30,13 @@
         <option>iPhone 13</option>
     </select>
 
-    <div id="reader"></div>
+    <div id="reader-container">
+        <div id="reader"></div>
+        <div class="scanner-overlay"></div>
+    </div>
 
     <button class="btn-main" onclick="addManual()">➕ إضافة يدوية</button>
-    <button class="btn-main" style="background:#34c759" onclick="downloadCSV()">⬇️ تحميل ملف Excel</button>
+    <button class="btn-main btn-download" onclick="downloadCSV()">⬇️ حفظ ملف Excel</button>
 
     <div class="table-container">
         <table>
