@@ -1,8 +1,7 @@
 let data = [], scanLocked = false;
-let currentTotalZoom = 1.0; 
+let currentTotalZoom = 1.0;
 let videoTrack = null;
 
-// وظائف التنبيه (صوت + بصري)
 function notify(text, isError = false) {
     if (!isError) {
         const speech = new SpeechSynthesisUtterance("لقد تم مسح imei");
@@ -17,21 +16,15 @@ function notify(text, isError = false) {
     setTimeout(() => t.remove(), 2500);
 }
 
-// تنظيف النص المستخرج ليكون IMEI صحيح
 function cleanIMEI(t) {
-    let n = t.replace(/\D/g, ''); 
+    let n = t.replace(/\D/g, '');
     return n.length === 15 ? n : null;
 }
 
-// إضافة صف للجدول (الترتيب: موديل - ايمي - حذف)
 function addRow(imei, model) {
     data.push({ model, imei });
     const i = data.length - 1;
-    const row = `<tr id="r${i}">
-        <td>${model}</td>
-        <td>${imei}</td>
-        <td><button style="border:none;background:none;color:red;font-size:18px" onclick="del(${i})">❌</button></td>
-    </tr>`;
+    const row = `<tr id="r${i}"><td>${model}</td><td>${imei}</td><td><button style="border:none;background:none;color:red;font-size:18px" onclick="del(${i})">❌</button></td></tr>`;
     document.getElementById('tableBody').insertAdjacentHTML('afterbegin', row);
 }
 
@@ -41,103 +34,85 @@ function del(i) {
     if(el) el.remove();
 }
 
-// --- إعدادات الماسح الضوئي الاحترافية ---
 const html5QrCode = new Html5Qrcode("reader");
 
-const config = {
-    fps: 40, // سرعة معالجة عالية جداً للمسح اللحظي
-    qrbox: { width: 320, height: 120 }, // مستطيل عريض مخصص لباركدوات الـ IMEI
-    aspectRatio: 1.0,
-    formatsToSupport: [ Html5QrcodeSupportedFormats.CODE_128 ] // التركيز على نوع باركود كراتين الآيفون
-};
-
-// وظيفة الزووم الهجين (تصل لـ 5x وتجبر الفوكس)
 async function applyHybridZoom(targetValue) {
     if (!videoTrack) return;
     const videoElement = document.querySelector('#reader video');
-    
     try {
         const capabilities = videoTrack.getCapabilities();
         let hwZoom = 1.0;
-
-        // تطبيق الزووم الحقيقي للجهاز
         if (capabilities.zoom) {
             hwZoom = Math.min(targetValue, capabilities.zoom.max);
-            await videoTrack.applyConstraints({
-                advanced: [
-                    { zoom: hwZoom },
-                    { focusMode: "continuous" } // إجبار العدسة على التركيز المستمر
-                ]
-            });
+            await videoTrack.applyConstraints({ advanced: [{ zoom: hwZoom }] });
         }
-
-        // تكملة الزووم برمجياً (CSS Scale) للوصول لـ 5x
         let cssScale = targetValue / hwZoom;
-        if (videoElement) {
-            videoElement.style.transform = `scale(${cssScale})`;
-        }
-
+        if (videoElement) videoElement.style.transform = `scale(${cssScale})`;
         currentTotalZoom = targetValue;
         document.getElementById('zoom-indicator').innerText = `Zoom: ${currentTotalZoom.toFixed(1)}x`;
+    } catch (e) { console.error(e); }
+}
+
+function changeZoom(amount) { applyHybridZoom(Math.min(Math.max(currentTotalZoom + amount, 1.0), 10.0)); }
+function setZoom(val) { applyHybridZoom(val); }
+
+// تشغيل الكاميرا
+html5QrCode.start({ facingMode: "environment" }, { fps: 25 }, () => {})
+    .then(() => {
+        const videoElement = document.querySelector('#reader video');
+        if (videoElement && videoElement.srcObject) videoTrack = videoElement.srcObject.getVideoTracks()[0];
+    });
+
+// الدالة السحرية: التقاط وتحليل الصورة الثابتة
+async function captureAndScan() {
+    if (scanLocked) return;
+    const model = document.getElementById('model').value;
+    if (!model) return notify("⚠️ اختر الموديل أولاً", true);
+
+    scanLocked = true;
+    notify("جاري التحليل...", false);
+
+    try {
+        const video = document.querySelector("#reader video");
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext("2d").drawImage(video, 0, 0);
+
+        canvas.toBlob(async (blob) => {
+            const imageFile = new File([blob], "scan.png", { type: "image/png" });
+            
+            // مسح الملف الثابت بدلاً من الفيديو المتغير
+            html5QrCode.scanFile(imageFile, true)
+                .then(decodedText => {
+                    const imei = cleanIMEI(decodedText);
+                    if (imei) {
+                        if (data.some(d => d.imei === imei)) notify("⚠️ مكرر مسبقاً", true);
+                        else { addRow(imei, model); notify("تم المسح بنجاح"); }
+                    }
+                    scanLocked = false;
+                })
+                .catch(() => {
+                    notify("لم يتم التعرف، جرب التقريب أكثر", true);
+                    scanLocked = false;
+                });
+        });
     } catch (e) {
-        console.error("Zoom/Focus Error:", e);
+        notify("خطأ في الالتقاط", true);
+        scanLocked = false;
     }
 }
 
-function changeZoom(amount) {
-    let nextZoom = Math.min(Math.max(currentTotalZoom + amount, 1.0), 10.0);
-    applyHybridZoom(nextZoom);
-}
-
-function setZoom(value) {
-    applyHybridZoom(value);
-}
-
-// تشغيل الماسح
-function startScanner() {
-    html5QrCode.start(
-        { facingMode: "environment" }, 
-        config,
-        (decodedText) => {
-            if (scanLocked) return;
-            const imei = cleanIMEI(decodedText);
-            const model = document.getElementById('model').value;
-
-            if (imei && model) {
-                if (data.some(d => d.imei === imei)) {
-                    scanLocked = true;
-                    notify("⚠️ هذا الرقم مكرر مسبقاً", true);
-                    setTimeout(() => scanLocked = false, 2500);
-                    return;
-                }
-                scanLocked = true;
-                addRow(imei, model);
-                notify("تم المسح بنجاح");
-                setTimeout(() => scanLocked = false, 1500);
-            }
-        }
-    ).then(() => {
-        const videoElement = document.querySelector('#reader video');
-        if (videoElement && videoElement.srcObject) {
-            videoTrack = videoElement.srcObject.getVideoTracks()[0];
-        }
-    }).catch(err => console.error("Scanner Error:", err));
-}
-
-startScanner();
-
-// تحميل ملف Excel (CSV)
 function downloadCSV() {
-    if (data.length === 0) return alert("الجدول فارغ!");
+    if (data.length === 0) return;
     let csv = '\uFEFFModel,IMEI\n';
     data.forEach(d => csv += `${d.model},${d.imei}\n`);
     const link = document.createElement("a");
-    link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
-    link.download = `Sales_Log_${new Date().toLocaleDateString()}.csv`;
+    link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    link.download = `Sales_${new Date().toLocaleDateString()}.csv`;
     link.click();
 }
 
-// إضافة يدوية
 function addManual() {
     let imei = prompt('ادخل IMEI (15 رقم)');
     if (imei && /^[0-9]{15}$/.test(imei)) {
