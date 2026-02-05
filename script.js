@@ -1,77 +1,87 @@
 let data = [], scanLocked = false;
 
-// وظيفة النطق الصوتي
-function speak(text) {
-  const msg = new SpeechSynthesisUtterance(text);
-  msg.lang = 'ar-SA';
-  msg.rate = 0.9; // سرعة هادئة
-  window.speechSynthesis.speak(msg);
+// وظيفة النطق الصوتي (غير مزعجة)
+function speakStatus(text) {
+    const speech = new SpeechSynthesisUtterance(text);
+    speech.lang = 'ar-SA';
+    window.speechSynthesis.speak(speech);
 }
 
-// إظهار تنبيه هادئ (Toast)
-function showStatus(message, type) {
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  toast.innerText = message;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 2500);
+// تنبيهات بصرية هادئة
+function showToast(msg, type) {
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.innerText = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2000);
 }
 
 function cleanIMEI(t) {
-  let n = t.replace(/\D/g, '');
-  return n.length === 15 ? n : null;
+    let n = t.replace(/\D/g, '');
+    return n.length === 15 ? n : null;
 }
 
 function addRow(imei, model) {
-  data.push({ model, imei });
-  let i = data.length - 1;
-  const row = `<tr id="r${i}">
-    <td>${model}</td>
-    <td>${imei}</td>
-    <td><button class="btn-del" onclick="del(${i})">❌</button></td>
-  </tr>`;
-  document.getElementById('tableBody').insertAdjacentHTML('beforeend', row);
+    data.push({ model, imei });
+    const i = data.length - 1;
+    const row = `<tr id="r${i}">
+        <td>${model}</td>
+        <td>${imei}</td>
+        <td><button style="background:none; color:red; width:auto; padding:5px" onclick="del(${i})">❌</button></td>
+    </tr>`;
+    document.getElementById('tableBody').insertAdjacentHTML('afterbegin', row); // الإضافة في الأعلى لتسهيل الرؤية
 }
 
 function del(i) {
-  data.splice(i, 1);
-  document.getElementById('r' + i).remove();
+    data.splice(i, 1);
+    document.getElementById('r' + i).remove();
 }
 
-const s = new Html5Qrcode('reader');
-s.start(
-  { facingMode: 'environment' },
-  { 
-    fps: 10, 
-    // تم تكبير الـ qrbox وتغيير إعداداته ليتناسب مع المسافة في الصورة
-    qrbox: { width: 280, height: 150 } 
-  },
-  t => {
-    if (scanLocked) return;
-    let model = document.getElementById('model').value;
-    if (!model) {
-        showStatus("يرجى اختيار نوع الآيفون أولاً", "warning");
-        return;
+// إعداد الماسح الضوئي ليتوافق مع المسافة المطلوبة
+const html5QrCode = new Html5Qrcode("reader");
+html5QrCode.start(
+    { facingMode: "environment" },
+    {
+        fps: 15, // سرعة مسح أعلى
+        qrbox: { width: 280, height: 160 }, // شكل مستطيل يناسب الباركود في الصورة
+        aspectRatio: 1.777778 // نسبة عرض الشاشة (16:9)
+    },
+    qrCodeMessage => {
+        if (scanLocked) return;
+        const model = document.getElementById('model').value;
+        if (!model) {
+            showToast("اختر نوع الجهاز أولاً", "warning");
+            return;
+        }
+
+        const imei = cleanIMEI(qrCodeMessage);
+        if (!imei) return;
+
+        // التحقق من التكرار
+        if (data.some(d => d.imei === imei)) {
+            scanLocked = true;
+            showToast("⚠️ تم مسحه مسبقاً", "warning");
+            setTimeout(() => scanLocked = false, 3000);
+            return;
+        }
+
+        // إضافة ناجحة
+        scanLocked = true;
+        addRow(imei, model);
+        showToast("✅ تم التسجيل", "success");
+        speakStatus("لقد تم مسح imei");
+        
+        setTimeout(() => scanLocked = false, 2500);
     }
+).catch(err => console.error(err));
 
-    let imei = cleanIMEI(t);
-    if (!imei) return;
-
-    // التحقق من التكرار
-    if (data.some(d => d.imei === imei)) {
-      scanLocked = true;
-      showStatus("هذا الـ IMEI مكرر مسبقاً", "warning");
-      setTimeout(() => scanLocked = false, 3000); // قفل المسح لفترة لتجنب إزعاج التكرار
-      return;
-    }
-
-    scanLocked = true;
-    addRow(imei, model);
-    showStatus("تم المسح بنجاح", "success");
-    speak("لقد تم مسح imei"); // التنبيه الصوتي المطلوب
-    
-    setTimeout(() => scanLocked = false, 2500); // مهلة قبل المسح القادم
-  }
-);
-
-// دالة التحميل والمmanual تبقى كما هي في ملفك الأصلي
+function downloadCSV() {
+    if(data.length === 0) return alert("الجدول فارغ!");
+    let csv = '\uFEFFModel,IMEI\n'; // إضافة BOM لدعم اللغة العربية في Excel
+    data.forEach(d => csv += `${d.model},${d.imei}\n`);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `Sales_Report_${new Date().toLocaleDateString()}.csv`;
+    link.click();
+}
