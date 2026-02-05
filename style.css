@@ -8,7 +8,6 @@ body {
 
 h2 { text-align: center; color: #1c1c1e; margin-bottom: 15px; }
 
-/* حاوية الماسح والمستطيل */
 #reader-container {
   position: relative;
   width: 100%;
@@ -22,7 +21,7 @@ h2 { text-align: center; color: #1c1c1e; margin-bottom: 15px; }
 
 #reader { width: 100% !important; border: none !important; }
 
-/* رسم المستطيل الأبيض برمجياً للأيفون */
+/* المستطيل الأبيض */
 .scanner-overlay {
   position: absolute;
   top: 50%;
@@ -32,9 +31,31 @@ h2 { text-align: center; color: #1c1c1e; margin-bottom: 15px; }
   height: 100px;
   border: 2px solid #ffffff;
   border-radius: 12px;
-  box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.4); /* تعتيم الخلفية */
-  z-index: 10;
+  box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.4);
+  z-index: 5;
   pointer-events: none;
+}
+
+/* تنسيق أزرار الزووم */
+.zoom-controls {
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 20px;
+  z-index: 20;
+}
+
+.zoom-controls button {
+  background: rgba(255, 255, 255, 0.8);
+  border: none;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #000;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 
 select, .btn-main {
@@ -45,30 +66,14 @@ select, .btn-main {
   font-size: 17px;
   border: 1px solid #d1d1d6;
   background: white;
-  display: block;
 }
 
 .btn-main { background-color: #007bff; color: white; border: none; font-weight: 600; }
 .btn-download { background-color: #34c759; margin-top: 10px; }
 
-/* الجدول */
-.table-container {
-  background: white;
-  border-radius: 14px;
-  margin-top: 25px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-
+.table-container { background: white; border-radius: 14px; margin-top: 25px; overflow: hidden; }
 table { width: 100%; border-collapse: collapse; table-layout: fixed; }
 th, td { padding: 12px 5px; text-align: center; border-bottom: 1px solid #f2f2f7; font-size: 14px; }
-
-/* الترتيب: موديل (يمين) - ايمي (وسط) - حذف (يسار) */
-th:nth-child(1), td:nth-child(1) { width: 35%; } 
-th:nth-child(2), td:nth-child(2) { width: 50%; font-family: monospace; } 
-th:nth-child(3), td:nth-child(3) { width: 15%; } 
-
-.btn-del { color: #ff3b30; font-size: 18px; background: none; border: none; }
 
 .toast {
   position: fixed;
@@ -79,5 +84,4 @@ th:nth-child(3), td:nth-child(3) { width: 15%; }
   border-radius: 20px;
   color: white;
   z-index: 9999;
-  font-weight: 500;
 }
