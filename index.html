@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>IMEI Scanner with Zoom</title>
+    <title>IMEI Scanner - High Zoom</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <h2>📦 نظام مسح الأجهزة المطوّر</h2>
+    <h2>📦 نظام مسح الأجهزة (زووم عالي)</h2>
 
     <select id="model">
         <option value="">-- اختر نوع الجهاز --</option>
@@ -35,8 +35,8 @@
         <div class="scanner-overlay"></div>
         
         <div class="zoom-controls">
-            <button onclick="changeZoom(0.5)">🔍 +</button>
-            <button onclick="changeZoom(-0.5)">🔍 -</button>
+            <button onclick="changeZoom(1.0)">🔍 ++ تقريب</button>
+            <button onclick="changeZoom(-1.0)">🔍 -- تبعيد</button>
         </div>
     </div>
 
@@ -49,7 +49,7 @@
                 <tr>
                     <th>الموديل</th>
                     <th>IMEI</th>
-                    <th>حذف</th>
+                    <th>إجراء</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
