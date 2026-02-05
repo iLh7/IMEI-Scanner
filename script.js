@@ -43,32 +43,33 @@ const config = {
     formatsToSupport: [ Html5QrcodeSupportedFormats.CODE_128 ]
 };
 
-// وظيفة الزووم المزدوج
-async function changeZoom(amount) {
+// وظيفة الزووم المحدثة (تدعم حتى 5x أو أقصى حد للجهاز)
+async function applyZoom(value) {
     if (!videoTrack) return;
-    
     try {
         const capabilities = videoTrack.getCapabilities();
-        if (!capabilities.zoom) {
-            console.log("الزووم غير مدعوم");
-            return;
-        }
+        if (!capabilities.zoom) return;
 
-        let min = capabilities.zoom.min;
-        let max = capabilities.zoom.max;
-        let step = capabilities.zoom.step || 0.1;
-        
-        // رفع القيمة المضافة لزيادة سرعة التقريب
-        currentZoom = Math.min(Math.max(currentZoom + amount, min), max);
+        // التأكد من عدم تجاوز حدود الجهاز (بعض الأجهزة قد تصل لـ 10x وبعضها لـ 3x)
+        let targetZoom = Math.min(Math.max(value, capabilities.zoom.min), capabilities.zoom.max);
         
         await videoTrack.applyConstraints({
-            advanced: [{ zoom: currentZoom }]
+            advanced: [{ zoom: targetZoom }]
         });
         
-        console.log("Zoom level set to:", currentZoom);
+        currentZoom = targetZoom;
+        document.getElementById('zoom-indicator').innerText = `Zoom: ${currentZoom.toFixed(1)}x`;
     } catch (e) {
         console.error("Zoom Error:", e);
     }
+}
+
+function changeZoom(amount) {
+    applyZoom(currentZoom + amount);
+}
+
+function setZoom(value) {
+    applyZoom(value);
 }
 
 function startScanner() {
@@ -104,7 +105,7 @@ function startScanner() {
 startScanner();
 
 function downloadCSV() {
-    if (data.length === 0) return alert("الجدول فارغ!");
+    if (data.length === 0) return;
     let csv = '\uFEFFModel,IMEI\n';
     data.forEach(d => csv += `${d.model},${d.imei}\n`);
     const link = document.createElement("a");
@@ -118,6 +119,6 @@ function addManual() {
     if (imei && /^[0-9]{15}$/.test(imei)) {
         let model = document.getElementById('model').value;
         if (model) addRow(imei, model);
-        else alert("اختر الموديل أولاً");
+        else alert("اختر الموديل");
     }
 }
