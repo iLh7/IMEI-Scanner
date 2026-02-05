@@ -1,5 +1,6 @@
 let data = [], scanLocked = false;
 
+// التنبيهات
 function notify(text, isError = false) {
     if (!isError) {
         const speech = new SpeechSynthesisUtterance("لقد تم مسح imei");
@@ -7,7 +8,7 @@ function notify(text, isError = false) {
         window.speechSynthesis.speak(speech);
     }
     const t = document.createElement('div');
-    t.className = `toast`;
+    t.className = 'toast';
     t.style.backgroundColor = isError ? '#ff9500' : '#34c759';
     t.innerText = text;
     document.body.appendChild(t);
@@ -22,7 +23,7 @@ function cleanIMEI(t) {
 function addRow(imei, model) {
     data.push({ model, imei });
     const i = data.length - 1;
-    const row = `<tr id="r${i}"><td>${model}</td><td>${imei}</td><td><button style="border:none;background:none;color:red;font-size:18px" onclick="del(${i})">❌</button></td></tr>`;
+    const row = `<tr id="r${i}"><td>${model}</td><td>${imei}</td><td><button class="btn-del" onclick="del(${i})">❌</button></td></tr>`;
     document.getElementById('tableBody').insertAdjacentHTML('afterbegin', row);
 }
 
@@ -32,53 +33,46 @@ function del(i) {
     if(el) el.remove();
 }
 
-// --- إعدادات الماسح الضوئي المستقرة ---
+// إعدادات الكاميرا والمسح
 const html5QrCode = new Html5Qrcode("reader");
 
-const qrConfig = {
-    fps: 20,
-    qrbox: { width: 300, height: 120 }, // حجم مثالي للباركود من مسافة
-    aspectRatio: 1.0
+const config = {
+    fps: 30, // سرعة عالية للالتقاط اللحظي
+    qrbox: { width: 280, height: 100 }, // مطابقة المستطيل الأبيض
+    aspectRatio: 1.0,
+    formatsToSupport: [ Html5QrcodeSupportedFormats.CODE_128 ]
 };
 
-// تشغيل الكاميرا بطريقة تضمن التوافق مع Safari و iPhone 13
-function startCamera() {
+function startScanner() {
     html5QrCode.start(
         { facingMode: "environment" }, 
-        qrConfig,
+        config,
         (decodedText) => {
             if (scanLocked) return;
             const imei = cleanIMEI(decodedText);
             const model = document.getElementById('model').value;
 
-            if (!imei) return;
-            
-            if (!model) {
+            if (imei && model) {
+                if (data.some(d => d.imei === imei)) {
+                    scanLocked = true;
+                    notify("⚠️ هذا الرقم مكرر", true);
+                    setTimeout(() => scanLocked = false, 2500);
+                    return;
+                }
+                scanLocked = true;
+                addRow(imei, model);
+                notify("تم المسح بنجاح");
+                setTimeout(() => scanLocked = false, 1500);
+            } else if (!model && imei) {
                 scanLocked = true;
                 notify("اختر الموديل أولاً", true);
                 setTimeout(() => scanLocked = false, 2000);
-                return;
             }
-
-            if (data.some(d => d.imei === imei)) {
-                scanLocked = true;
-                notify("⚠️ هذا الجهاز مكرر", true);
-                setTimeout(() => scanLocked = false, 2500);
-                return;
-            }
-
-            scanLocked = true;
-            addRow(imei, model);
-            notify("تم المسح بنجاح");
-            setTimeout(() => scanLocked = false, 1800);
         }
-    ).catch(err => {
-        console.error("Camera failed:", err);
-        alert("فشل فتح الكاميرا، يرجى التأكد من إعطاء الصلاحية للمتصفح.");
-    });
+    ).catch(err => console.error("Camera Error: ", err));
 }
 
-startCamera();
+startScanner();
 
 function downloadCSV() {
     if (data.length === 0) return alert("الجدول فارغ!");
