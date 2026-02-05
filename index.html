@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>IMEI Scanner iPro</title>
+    <title>IMEI Scanner with Zoom</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <h2>IMEI Scanner iPro</h2>
+    <h2>📦 نظام مسح الأجهزة المطوّر</h2>
 
     <select id="model">
         <option value="">-- اختر نوع الجهاز --</option>
@@ -33,6 +33,11 @@
     <div id="reader-container">
         <div id="reader"></div>
         <div class="scanner-overlay"></div>
+        
+        <div class="zoom-controls">
+            <button onclick="changeZoom(0.5)">🔍 +</button>
+            <button onclick="changeZoom(-0.5)">🔍 -</button>
+        </div>
     </div>
 
     <button class="btn-main" onclick="addManual()">➕ إضافة يدوية</button>
