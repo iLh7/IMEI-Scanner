@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>IMEI Scanner Pro</title>
+    <title>IMEI Barcode Scanner Pro</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <h2>📦  مسح IMEI</h2>
+    <h2>📦 نظام مسح الأجهزة الذكي</h2>
 
     <select id="model">
-        <option value="">-- اختر نوع الآيفون --</option>
+        <option value="">-- اختر نوع الجهاز --</option>
         <option>iPhone 17 Pro Max</option>
         <option>iPhone 17 Pro</option>
         <option>iPhone 17</option>
@@ -32,16 +32,16 @@
 
     <div id="reader"></div>
 
-    <button onclick="addManual()">➕ إضافة يدوية</button>
-    <button class="btn-download" onclick="downloadCSV()">⬇️ تحميل ملف Excel</button>
+    <button class="btn-main" onclick="addManual()">➕ إضافة يدوية</button>
+    <button class="btn-main btn-download" onclick="downloadCSV()">⬇️ حفظ ملف المبيعات (Excel)</button>
 
     <div class="table-container">
         <table>
             <thead>
                 <tr>
-                    <th>الإجراء</th>
-                    <th>IMEI</th>
                     <th>الموديل</th>
+                    <th>IMEI</th>
+                    <th>إجراء</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
