@@ -37,33 +37,35 @@ function del(i) {
 const html5QrCode = new Html5Qrcode("reader");
 
 const config = {
-    fps: 25,
+    fps: 30,
     qrbox: { width: 280, height: 100 },
     aspectRatio: 1.0,
     formatsToSupport: [ Html5QrcodeSupportedFormats.CODE_128 ]
 };
 
-// وظيفة التحكم في الزووم
+// وظيفة الزووم المزدوج
 async function changeZoom(amount) {
     if (!videoTrack) return;
     
     try {
         const capabilities = videoTrack.getCapabilities();
         if (!capabilities.zoom) {
-            console.log("الزووم غير مدعوم في هذا المتصفح/الجهاز");
+            console.log("الزووم غير مدعوم");
             return;
         }
 
         let min = capabilities.zoom.min;
         let max = capabilities.zoom.max;
+        let step = capabilities.zoom.step || 0.1;
         
+        // رفع القيمة المضافة لزيادة سرعة التقريب
         currentZoom = Math.min(Math.max(currentZoom + amount, min), max);
         
         await videoTrack.applyConstraints({
             advanced: [{ zoom: currentZoom }]
         });
         
-        console.log("Current Zoom:", currentZoom);
+        console.log("Zoom level set to:", currentZoom);
     } catch (e) {
         console.error("Zoom Error:", e);
     }
@@ -81,33 +83,33 @@ function startScanner() {
             if (imei && model) {
                 if (data.some(d => d.imei === imei)) {
                     scanLocked = true;
-                    notify("⚠️ مكرر", true);
+                    notify("⚠️ الرقم مكرر", true);
                     setTimeout(() => scanLocked = false, 2500);
                     return;
                 }
                 scanLocked = true;
                 addRow(imei, model);
-                notify("تم المسح");
+                notify("تم المسح بنجاح");
                 setTimeout(() => scanLocked = false, 1500);
             }
         }
     ).then(() => {
-        // الحصول على مسار الفيديو للتحكم في الزووم بعد التشغيل
         const videoElement = document.querySelector('#reader video');
         if (videoElement && videoElement.srcObject) {
             videoTrack = videoElement.srcObject.getVideoTracks()[0];
         }
-    }).catch(err => console.error("Scanner Start Error:", err));
+    }).catch(err => console.error("Scanner Error:", err));
 }
 
 startScanner();
 
 function downloadCSV() {
+    if (data.length === 0) return alert("الجدول فارغ!");
     let csv = '\uFEFFModel,IMEI\n';
     data.forEach(d => csv += `${d.model},${d.imei}\n`);
     const link = document.createElement("a");
     link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
-    link.download = `Sales.csv`;
+    link.download = `Sales_Log.csv`;
     link.click();
 }
 
@@ -116,6 +118,6 @@ function addManual() {
     if (imei && /^[0-9]{15}$/.test(imei)) {
         let model = document.getElementById('model').value;
         if (model) addRow(imei, model);
-        else alert("اختر النوع");
+        else alert("اختر الموديل أولاً");
     }
 }
