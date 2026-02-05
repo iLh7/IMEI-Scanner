@@ -2,6 +2,7 @@ let data = [], scanLocked = false;
 let currentTotalZoom = 1.0;
 let videoTrack = null;
 
+// وظائف التنبيه
 function notify(text, isError = false) {
     if (!isError) {
         const speech = new SpeechSynthesisUtterance("لقد تم مسح imei");
@@ -36,6 +37,16 @@ function del(i) {
 
 const html5QrCode = new Html5Qrcode("reader");
 
+// تشغيل الكاميرا بإعدادات مستقرة
+html5QrCode.start({ facingMode: "environment" }, { fps: 20 }, () => {})
+    .then(() => {
+        const videoElement = document.querySelector('#reader video');
+        if (videoElement && videoElement.srcObject) {
+            videoTrack = videoElement.srcObject.getVideoTracks()[0];
+        }
+    });
+
+// دالة الزووم الهجين
 async function applyHybridZoom(targetValue) {
     if (!videoTrack) return;
     const videoElement = document.querySelector('#reader video');
@@ -56,49 +67,51 @@ async function applyHybridZoom(targetValue) {
 function changeZoom(amount) { applyHybridZoom(Math.min(Math.max(currentTotalZoom + amount, 1.0), 10.0)); }
 function setZoom(val) { applyHybridZoom(val); }
 
-// تشغيل الكاميرا
-html5QrCode.start({ facingMode: "environment" }, { fps: 25 }, () => {})
-    .then(() => {
-        const videoElement = document.querySelector('#reader video');
-        if (videoElement && videoElement.srcObject) videoTrack = videoElement.srcObject.getVideoTracks()[0];
-    });
-
-// الدالة السحرية: التقاط وتحليل الصورة الثابتة
+// --- المحرك الجديد للمسح الفوري عند الضغط ---
 async function captureAndScan() {
     if (scanLocked) return;
     const model = document.getElementById('model').value;
     if (!model) return notify("⚠️ اختر الموديل أولاً", true);
 
     scanLocked = true;
-    notify("جاري التحليل...", false);
+    notify("جاري التحليل الفوري...", false);
 
     try {
         const video = document.querySelector("#reader video");
-        const canvas = document.createElement("canvas");
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext("2d").drawImage(video, 0, 0);
-
-        canvas.toBlob(async (blob) => {
-            const imageFile = new File([blob], "scan.png", { type: "image/png" });
-            
-            // مسح الملف الثابت بدلاً من الفيديو المتغير
-            html5QrCode.scanFile(imageFile, true)
-                .then(decodedText => {
-                    const imei = cleanIMEI(decodedText);
-                    if (imei) {
-                        if (data.some(d => d.imei === imei)) notify("⚠️ مكرر مسبقاً", true);
-                        else { addRow(imei, model); notify("تم المسح بنجاح"); }
-                    }
-                    scanLocked = false;
-                })
-                .catch(() => {
-                    notify("لم يتم التعرف، جرب التقريب أكثر", true);
-                    scanLocked = false;
+        
+        // استخدام المسح المباشر من عنصر الفيديو (أسرع وأدق حل للأيفون)
+        html5QrCode.scanFile(video, true) // المسح المباشر من داتا الفيديو
+            .then(decodedText => {
+                const imei = cleanIMEI(decodedText);
+                if (imei) {
+                    if (data.some(d => d.imei === imei)) notify("⚠️ مكرر مسبقاً", true);
+                    else { addRow(imei, model); notify("تم المسح بنجاح"); }
+                }
+                scanLocked = false;
+            })
+            .catch(() => {
+                // محاولة ثانية باستخدام اللقطة الثابتة إذا فشل المسح المباشر
+                const canvas = document.createElement("canvas");
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.getContext("2d").drawImage(video, 0, 0);
+                
+                canvas.toBlob((blob) => {
+                    const file = new File([blob], "img.png", {type: "image/png"});
+                    html5QrCode.scanFile(file, true)
+                        .then(res => {
+                            const imei = cleanIMEI(res);
+                            if(imei) { addRow(imei, model); notify("تم المسح بنجاح"); }
+                            scanLocked = false;
+                        })
+                        .catch(() => {
+                            notify("لم يتم التعرف، جرب التقريب أو الإضاءة", true);
+                            scanLocked = false;
+                        });
                 });
-        });
+            });
     } catch (e) {
-        notify("خطأ في الالتقاط", true);
+        notify("خطأ في الاتصال بالكاميرا", true);
         scanLocked = false;
     }
 }
