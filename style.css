@@ -13,7 +13,7 @@ body {
   border-radius: 20px;
   overflow: hidden;
   background: #000;
-  border: 2px solid #007aff;
+  border: 2px solid #007bff;
   box-shadow: 0 8px 25px rgba(0,0,0,0.1);
 }
 
@@ -24,10 +24,11 @@ select, .btn-main {
   border-radius: 12px;
   font-size: 17px;
   border: 1px solid #d1d1d6;
+  background: white;
 }
 
 .btn-main {
-  background-color: #007aff;
+  background-color: #007bff;
   color: white;
   font-weight: 600;
   border: none;
@@ -38,15 +39,16 @@ select, .btn-main {
   border-radius: 14px;
   margin-top: 20px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  overflow-x: auto;
 }
 
 table { width: 100%; border-collapse: collapse; table-layout: fixed; }
 th, td { padding: 12px 8px; text-align: center; border-bottom: 1px solid #f2f2f7; font-size: 14px; }
 
-/* ترتيب الأعمدة المطلوبة */
-th:nth-child(1), td:nth-child(1) { width: 35%; } /* الموديل */
-th:nth-child(2), td:nth-child(2) { width: 50%; font-family: monospace; } /* IMEI */
-th:nth-child(3), td:nth-child(3) { width: 15%; } /* حذف */
+/* ترتيب الأعمدة: موديل - ايمي - إجراء */
+th:nth-child(1), td:nth-child(1) { width: 35%; } 
+th:nth-child(2), td:nth-child(2) { width: 50%; } 
+th:nth-child(3), td:nth-child(3) { width: 15%; } 
 
 .toast {
   position: fixed;
@@ -57,4 +59,5 @@ th:nth-child(3), td:nth-child(3) { width: 15%; } /* حذف */
   border-radius: 20px;
   color: white;
   z-index: 9999;
+  font-weight: bold;
 }
