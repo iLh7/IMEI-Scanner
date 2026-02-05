@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>IMEI Scanner - 5x Zoom</title>
+    <title>IMEI Scanner - Universal 5x Zoom</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <h2>iPro IMEI Scanner</h2>
+    <h2>📦 ماسح IMEI (زووم 5x موحد)</h2>
 
     <select id="model">
         <option value="">-- اختر نوع الجهاز --</option>
@@ -39,6 +39,8 @@
         <div class="zoom-controls">
             <button onclick="changeZoom(1.0)">➕ تقريب</button>
             <button onclick="changeZoom(-1.0)">➖ تبعيد</button>
+            <button onclick="setZoom(5.0)" style="background:#ff9500; color:white">🚀 MAX 5x</button>
+            <button onclick="setZoom(1.0)" style="background:#8e8e93; color:white">🔄 1x</button>
         </div>
     </div>
 
