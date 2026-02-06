@@ -1,13 +1,8 @@
-/**
- * Project: IMEI Scanner Pro
- * Organization: Connect
- * Developer: Louai
- */
-
 let data = [], scanLocked = false;
 let currentTotalZoom = 1.0;
 let videoTrack = null;
 
+// وظيفة التنبيه البصري فقط (بدون صوت)
 function notify(text, isError = false) {
     const t = document.createElement('div');
     t.className = 'toast';
@@ -25,10 +20,11 @@ function cleanIMEI(t) {
 function addRow(imei, model) {
     data.push({ model, imei });
     const i = data.length - 1;
+    // الترتيب في الصف: موديل (يسار) ثم IMEI ثم حذف (يمين)
     const row = `<tr id="r${i}">
-        <td>${model}</td>
+        <td style="text-align: left;">${model}</td>
         <td>${imei}</td>
-        <td><button style="border:none;background:none;color:red;font-size:18px" onclick="del(${i})">❌</button></td>
+        <td style="text-align: right;"><button style="border:none;background:none;color:red;font-size:18px" onclick="del(${i})">❌</button></td>
     </tr>`;
     document.getElementById('tableBody').insertAdjacentHTML('afterbegin', row);
 }
@@ -61,16 +57,24 @@ async function applyHybridZoom(targetValue) {
 function changeZoom(amount) { applyHybridZoom(Math.min(Math.max(currentTotalZoom + amount, 1.0), 10.0)); }
 function setZoom(val) { applyHybridZoom(val); }
 
+// تشغيل المسح التلقائي
 function startScanner() {
     html5QrCode.start(
         { facingMode: "environment" }, 
-        { fps: 30, qrbox: { width: 300, height: 120 }, formatsToSupport: [ Html5QrcodeSupportedFormats.CODE_128 ] },
+        { 
+            fps: 30, 
+            qrbox: { width: 300, height: 120 },
+            formatsToSupport: [ Html5QrcodeSupportedFormats.CODE_128 ]
+        },
         (decodedText) => {
             if (scanLocked) return;
+
             const model = document.getElementById('model').value;
             const imei = cleanIMEI(decodedText);
+
             if (!imei) return;
 
+            // التنبيه قبل المسح إذا لم يتم اختيار الجهاز
             if (!model) {
                 scanLocked = true;
                 notify("⚠️ يرجى اختيار نوع الجهاز قبل البدء بالمسح", true);
@@ -98,17 +102,26 @@ function startScanner() {
 
 startScanner();
 
+// وظيفة التحميل مع طلب اسم الملف
 function downloadCSV() {
     if (data.length === 0) return alert("الجدول فارغ!");
-    let fileName = prompt("أدخل اسم الملف المراد حفظه:", `Report_${new Date().toLocaleDateString()}`);
+    
+    // طلب اسم الملف من المستخدم
+    let fileName = prompt("أدخل اسم الملف  :", `Report_${new Date().toLocaleDateString()}`);
+    
+    // إذا ضغط المستخدم إلغاء (Cancel)
     if (fileName === null) return;
-    if (fileName.trim() === "") fileName = `Report_${new Date().toLocaleDateString()}`;
+    
+    // إذا ترك الاسم فارغاً، نضع اسماً افتراضياً
+    if (fileName.trim() === "") {
+        fileName = `Report_${new Date().toLocaleDateString()}`;
+    }
 
     let csv = '\uFEFFModel,IMEI\n';
     data.forEach(d => csv += `${d.model},${d.imei}\n`);
     const link = document.createElement("a");
     link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
-    link.download = `${fileName}.csv`;
+    link.download = `${fileName}.csv`; // استخدام الاسم الذي اخترته
     link.click();
 }
 
