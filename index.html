@@ -3,64 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>IMEI Scanner - Capture Mode</title>
+    <title>Inventory Scanner - Louai</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <h2>📦 نظام مسح الأجهزة (وضع الالتقاط)</h2>
+    <h2 class="main-title">Inventory Scanner</h2>
 
-    <select id="model">
-        <option value="">-- اختر نوع الجهاز --</option>
-        <option>iPhone 17 Pro Max</option>
-        <option>iPhone 17 Pro</option>
-        <option>iPhone 17</option>
-        <option>iPhone Air</option>
-        <option>iPhone 16 Pro Max</option>
-        <option>iPhone 16 Pro</option>
-        <option>iPhone 16</option>
-        <option>iPhone 15 Pro Max</option>
-        <option>iPhone 15 Pro</option>
-        <option>iPhone 15</option>
-        <option>iPhone 14 Pro Max</option>
-        <option>iPhone 14 Pro</option>
-        <option>iPhone 14</option>
-        <option>iPhone 13 Pro Max</option>
-        <option>iPhone 13 Pro</option>
-        <option>iPhone 13</option>
-    </select>
-
-    <div id="reader-container">
-        <div id="reader"></div>
-        <div class="scanner-overlay"></div>
-        <div id="zoom-indicator">Zoom: 1.0x</div>
-        
-        <div class="zoom-controls">
-            <button onclick="changeZoom(1.0)">➕ تقريب</button>
-            <button onclick="changeZoom(-1.0)">➖ تبعيد</button>
-            <button onclick="setZoom(1.0)">🔄 1x</button>
-        </div>
+    <div class="main-container info-card">
+        <h3 class="card-subtitle">What's New?</h3>
+        <ul class="info-list">
+            <li>تحسين سرعة المسح التلقائي لباركود IMEI.</li>
+            <li>إضافة ميزة الزووم الهجين (حتى 10x) لجميع الأجهزة.</li>
+        </ul>
     </div>
 
-    <button class="btn-main btn-capture" onclick="captureAndScan()">📸 اضغط للمسح الآن</button>
-    
-    <div class="action-buttons">
-        <button class="btn-secondary" onclick="addManual()">➕ إضافة يدوية</button>
-        <button class="btn-secondary btn-download" onclick="downloadCSV()">⬇️ تحميل Excel</button>
+    <div class="main-container">
+        <div class="input-group">
+            <label class="input-label">Choose Category / اختر الفئة</label>
+            <select id="model">
+                <option value="">— Select —</option>
+                <option>iPhone 17 Pro Max</option>
+                <option>iPhone 17 Pro</option>
+                <option>iPhone 16 Pro Max</option>
+                <option>iPhone 16 Pro</option>
+                <option>iPhone 15 Pro Max</option>
+                <option>iPhone 15 Pro</option>
+                <option>iPhone 14 Pro Max</option>
+                <option>iPhone 13 Pro Max</option>
+            </select>
+        </div>
+
+        <div id="reader-container">
+            <div id="reader"></div>
+            <div class="scanner-overlay"></div>
+            <div id="zoom-indicator">Zoom: 1.0x</div>
+            
+            <div class="zoom-controls">
+                <button onclick="changeZoom(1.0)">➕</button>
+                <button onclick="changeZoom(-1.0)">➖</button>
+                <button onclick="setZoom(1.0)">1x</button>
+            </div>
+        </div>
+
+        <button class="btn-main" onclick="addManual()">➕ إضافة يدوية</button>
+        <button class="btn-main btn-download" onclick="downloadCSV()">⬇️ حفظ ملف Excel</button>
     </div>
 
     <div class="table-container">
         <table>
             <thead>
                 <tr>
-                    <th>الموديل</th>
+                    <th>Model</th>
                     <th>IMEI</th>
-                    <th>إجراء</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
         </table>
     </div>
+
+    <footer class="connect-footer">
+        Developed by <strong>Louai</strong> | Connect © 2026
+    </footer>
 
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="script.js"></script>
