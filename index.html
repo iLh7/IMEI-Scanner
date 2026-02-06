@@ -1,73 +1,73 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>iScanner</title>
+    <title>iPro IMEI Auto Scanner</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <h2 class="main-title">iScanner</h2>
+    <h2>iScanner 🤳𝄃𝄃𝄂𝄂𝄀𝄁𝄃𝄂𝄂𝄃</h2>
 
-    <div class="main-container">
-        <div class="input-group">
-            <label class="input-label">Choose Category / اختر الفئة</label>
-            <select id="model">
-                <option value="">— اختر نوع الجهاز أولاً —</option>
-                <option>iPhone 17 Pro Max</option>
-                <option>iPhone 17 Pro</option>
-                <option>iPhone 17</option>
-                <option>iPhone Air</option>
-                <option>iPhone 16 Pro Max</option>
-                <option>iPhone 16 Pro</option>
-                <option>iPhone 16</option>
-                <option>iPhone 15 Pro Max</option>
-                <option>iPhone 15 Pro</option>
-                <option>iPhone 15</option>
-                <option>iPhone 14 Pro Max</option>
-                <option>iPhone 14 Pro</option>
-                <option>iPhone 14</option>
-                <option>iPhone 13 Pro Max</option>
-                <option>iPhone 13 Pro</option>
-                <option>iPhone 13</option>
-            </select>
+    <select id="model">
+        <option value="">-- اختر نوع الجهاز أولاً --</option>
+        <option>iPhone 17 Pro Max</option>
+        <option>iPhone 17 Pro</option>
+        <option>iPhone 17</option>
+        <option>iPhone Air</option>
+        <option>iPhone 16 Pro Max</option>
+        <option>iPhone 16 Pro</option>
+        <option>iPhone 16 Plus</option>
+        <option>iPhone 16e</option>
+        <option>iPhone 16</option>
+        <option>iPhone 15 Pro Max</option>
+        <option>iPhone 15 Pro</option>
+        <option>iPhone 15 Plus</option>
+        <option>iPhone 15</option>
+        <option>iPhone 14 Pro Max</option>
+        <option>iPhone 14 Pro</option>
+        <option>iPhone 14 Plus</option>
+        <option>iPhone 14</option>
+        <option>iPhone 13 Pro Max</option>
+        <option>iPhone 13 Pro</option>
+        <option>iPhone 13</option>
+        <option>iPhone 13 Mini♡</option>
+    </select>
+
+    <div id="reader-container">
+        <div id="reader"></div>
+        <div class="scanner-overlay"></div>
+        <div id="zoom-indicator">Zoom: 1.0x</div>
+
+        <div class="zoom-controls">
+            <button onclick="changeZoom(1.0)">➕ تقريب</button>
+            <button onclick="changeZoom(-1.0)">➖ تبعيد</button>
+            <button onclick="setZoom(1.0)">🔄 1x</button>
         </div>
-
-        <div id="reader-container">
-            <div id="reader"></div>
-            <div class="scanner-overlay"></div>
-            <div id="zoom-indicator">Zoom: 1.0x</div>
-            
-            <div class="zoom-controls">
-                <button onclick="changeZoom(1.0)">➕</button>
-                <button onclick="changeZoom(-1.0)">➖</button>
-                <button onclick="setZoom(1.0)">1x</button>
-            </div>
-        </div>
-
-        <button class="btn-main" onclick="addManual()">➕ إضافة يدوية</button>
-        <button class="btn-main btn-download" onclick="downloadCSV()">⬇️ حفظ ملف Excel</button>
     </div>
+
+    <button class="btn-main" onclick="addManual()">➕ إضافة يدوية</button>
+    <button class="btn-main btn-download" onclick="downloadCSV()">⬇️ حفظ ملف Excel</button>
 
     <div class="table-container">
         <table>
             <thead>
                 <tr>
-                    <th>Model</th>
+                    <th style="text-align: left;">Model</th>
                     <th>IMEI</th>
-                    <th>Action</th>
+                    <th style="text-align: right;">Delete</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
         </table>
     </div>
 
-    <footer class="connect-footer">
-        Developed by <strong>iPro Louai</strong> | Connect © 2026
-    </footer>
-
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="script.js"></script>
+    <footer class="connect-footer">
+    Developed by <strong>iPro Louai</strong> | Connect © 2026
+</footer>
 </body>
 </html>
