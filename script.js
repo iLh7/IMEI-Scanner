@@ -1,14 +1,14 @@
+/**
+ * Project: IMEI Scanner Pro
+ * Organization: Connect
+ * Developer: Louai
+ */
+
 let data = [], scanLocked = false;
-let currentTotalZoom = 1.0; 
+let currentTotalZoom = 1.0;
 let videoTrack = null;
 
-// وظائف التنبيه
 function notify(text, isError = false) {
-    if (!isError) {
-        const speech = new SpeechSynthesisUtterance("لقد تم مسح imei");
-        speech.lang = 'ar-SA';
-        window.speechSynthesis.speak(speech);
-    }
     const t = document.createElement('div');
     t.className = 'toast';
     t.style.backgroundColor = isError ? '#ff9500' : '#34c759';
@@ -18,7 +18,7 @@ function notify(text, isError = false) {
 }
 
 function cleanIMEI(t) {
-    let n = t.replace(/\D/g, ''); 
+    let n = t.replace(/\D/g, '');
     return n.length === 15 ? n : null;
 }
 
@@ -41,48 +41,54 @@ function del(i) {
 
 const html5QrCode = new Html5Qrcode("reader");
 
-// الزووم الهجين القسري لتجاوز قيود جميع الأجهزة
 async function applyHybridZoom(targetValue) {
     if (!videoTrack) return;
     const videoElement = document.querySelector('#reader video');
     try {
         const capabilities = videoTrack.getCapabilities();
         let hwZoom = 1.0;
-
         if (capabilities.zoom) {
             hwZoom = Math.min(targetValue, capabilities.zoom.max);
             await videoTrack.applyConstraints({ advanced: [{ zoom: hwZoom }] });
         }
-
         let cssScale = targetValue / hwZoom;
-        if (videoElement) {
-            videoElement.style.transform = `scale(${cssScale})`;
-        }
-
+        if (videoElement) videoElement.style.transform = `scale(${cssScale})`;
         currentTotalZoom = targetValue;
         document.getElementById('zoom-indicator').innerText = `Zoom: ${currentTotalZoom.toFixed(1)}x`;
     } catch (e) { console.error(e); }
 }
 
-function changeZoom(amount) {
-    applyHybridZoom(Math.min(Math.max(currentTotalZoom + amount, 1.0), 10.0));
-}
-
+function changeZoom(amount) { applyHybridZoom(Math.min(Math.max(currentTotalZoom + amount, 1.0), 10.0)); }
 function setZoom(val) { applyHybridZoom(val); }
 
-// تشغيل الكاميرا مع تفعيل المسح التلقائي المستمر
 function startScanner() {
     html5QrCode.start(
         { facingMode: "environment" }, 
-        { 
-            fps: 30, 
-            qrbox: { width: 300, height: 120 },
-            aspectRatio: 1.0,
-            formatsToSupport: [ Html5QrcodeSupportedFormats.CODE_128 ]
-        },
+        { fps: 30, qrbox: { width: 300, height: 120 }, formatsToSupport: [ Html5QrcodeSupportedFormats.CODE_128 ] },
         (decodedText) => {
-            // المسح التلقائي: يعمل إذا التقطت الكاميرا الباركود بوضوح
-            processScanResult(decodedText);
+            if (scanLocked) return;
+            const model = document.getElementById('model').value;
+            const imei = cleanIMEI(decodedText);
+            if (!imei) return;
+
+            if (!model) {
+                scanLocked = true;
+                notify("⚠️ يرجى اختيار نوع الجهاز قبل البدء بالمسح", true);
+                setTimeout(() => scanLocked = false, 3000);
+                return;
+            }
+
+            if (data.some(d => d.imei === imei)) {
+                scanLocked = true;
+                notify("⚠️ هذا الـ IMEI مكرر", true);
+                setTimeout(() => scanLocked = false, 2500);
+                return;
+            }
+
+            scanLocked = true;
+            addRow(imei, model);
+            notify("✅ تم المسح بنجاح");
+            setTimeout(() => scanLocked = false, 2000);
         }
     ).then(() => {
         const videoElement = document.querySelector('#reader video');
@@ -90,61 +96,19 @@ function startScanner() {
     });
 }
 
-function processScanResult(decodedText) {
-    if (scanLocked) return;
-    const imei = cleanIMEI(decodedText);
-    const model = document.getElementById('model').value;
-
-    if (imei && model) {
-        if (data.some(d => d.imei === imei)) {
-            scanLocked = true;
-            notify("⚠️ مكرر مسبقاً", true);
-            setTimeout(() => scanLocked = false, 2500);
-        } else {
-            scanLocked = true;
-            addRow(imei, model);
-            notify("تم المسح بنجاح");
-            setTimeout(() => scanLocked = false, 1500);
-        }
-    }
-}
-
-// زر المسح اليدوي: يقوم بالتقاط "بكسلي" مباشر للمسح القسري
-async function captureAndScan() {
-    if (scanLocked) return;
-    const model = document.getElementById('model').value;
-    if (!model) return notify("⚠️ اختر الموديل أولاً", true);
-
-    scanLocked = true;
-    notify("جاري التحليل القسري...", false);
-
-    try {
-        const video = document.querySelector("#reader video");
-        // المسح مباشرة من عنصر الفيديو بدلاً من إنشاء ملفات (أسرع للأيفون)
-        html5QrCode.scanFile(video, true)
-            .then(decodedText => {
-                processScanResult(decodedText);
-                scanLocked = false;
-            })
-            .catch(() => {
-                notify("لم يتم التعرف، جرب التقريب بالزووم", true);
-                scanLocked = false;
-            });
-    } catch (e) {
-        notify("خطأ في الاتصال بالكاميرا", true);
-        scanLocked = false;
-    }
-}
-
 startScanner();
 
 function downloadCSV() {
-    if (data.length === 0) return;
+    if (data.length === 0) return alert("الجدول فارغ!");
+    let fileName = prompt("أدخل اسم الملف المراد حفظه:", `Report_${new Date().toLocaleDateString()}`);
+    if (fileName === null) return;
+    if (fileName.trim() === "") fileName = `Report_${new Date().toLocaleDateString()}`;
+
     let csv = '\uFEFFModel,IMEI\n';
     data.forEach(d => csv += `${d.model},${d.imei}\n`);
     const link = document.createElement("a");
-    link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-    link.download = `Sales_Log.csv`;
+    link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+    link.download = `${fileName}.csv`;
     link.click();
 }
 
@@ -153,6 +117,6 @@ function addManual() {
     if (imei && /^[0-9]{15}$/.test(imei)) {
         let model = document.getElementById('model').value;
         if (model) addRow(imei, model);
-        else alert("اختر الموديل أولاً");
+        else alert("⚠️ اختر الموديل أولاً");
     }
 }
